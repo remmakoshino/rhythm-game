@@ -33,12 +33,18 @@
 | Esc | 一時停止 |
 
 ### タッチ/マウス
-画面の判定サークルを直接タップ/クリック
+- 画面の判定サークルを直接タップ/クリック
+- マルチタッチ対応（同時押し可能）
+- タイトル画面でダブルタップでフルスクリーン
 
 ## 🚀 プレイ方法
 
 ### GitHub Pages でプレイ
 https://remmakoshino.github.io/rhythm-game/
+
+### デプロイ
+GitHub Actionsによる自動デプロイが設定されています。
+`main`ブランチにプッシュすると自動的にGitHub Pagesにデプロイされます。
 
 ### ローカルでプレイ
 1. リポジトリをクローン
@@ -53,6 +59,9 @@ https://remmakoshino.github.io/rhythm-game/
 
 ```
 rhythm-game/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml  # GitHub Actions デプロイ設定
 ├── index.html          # メインHTML
 ├── css/
 │   └── style.css       # スタイルシート

@@ -166,11 +166,20 @@ class RhythmGame {
         
         // 判定サークルのタップ/クリック
         this.judgeCircles.forEach((circle, index) => {
-            // タッチイベント
+            // タッチイベント（パッシブ無効で確実にpreventDefault）
             circle.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 this.handleTap(index);
-            });
+                // 視覚フィードバック
+                circle.classList.add('active');
+                setTimeout(() => circle.classList.remove('active'), 150);
+            }, { passive: false });
+            
+            // タッチ終了
+            circle.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            }, { passive: false });
             
             // マウスイベント
             circle.addEventListener('mousedown', (e) => {
@@ -179,10 +188,125 @@ class RhythmGame {
             });
         });
         
+        // マルチタッチ対応：ゲームエリア全体でのタッチ処理
+        this.setupMultiTouchSupport();
+        
         // オーディオ終了時
         this.audio.addEventListener('ended', () => {
             this.endGame();
         });
+        
+        // 画面リサイズ対応
+        window.addEventListener('resize', () => {
+            this.handleResize();
+        });
+        
+        // 画面の向き変更対応
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.handleResize(), 100);
+        });
+        
+        // フルスクリーンAPI対応
+        this.setupFullscreenSupport();
+    }
+    
+    /**
+     * マルチタッチサポート
+     */
+    setupMultiTouchSupport() {
+        const noteField = this.elements.noteField;
+        
+        noteField.addEventListener('touchstart', (e) => {
+            if (this.state !== 'playing') return;
+            
+            // 各タッチポイントを処理
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const lane = this.getTouchedLane(touch.clientX, touch.clientY);
+                
+                if (lane !== -1) {
+                    this.handleTap(lane);
+                    
+                    // 視覚フィードバック
+                    const circle = this.judgeCircles[lane];
+                    circle.classList.add('active');
+                    setTimeout(() => circle.classList.remove('active'), 150);
+                }
+            }
+        }, { passive: true });
+    }
+    
+    /**
+     * タッチ位置から対応するレーンを取得
+     */
+    getTouchedLane(x, y) {
+        let closestLane = -1;
+        let closestDistance = Infinity;
+        
+        this.judgeCircles.forEach((circle, index) => {
+            const rect = circle.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const distance = Math.sqrt(
+                Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+            );
+            
+            // タッチ判定の許容範囲（サークルの1.5倍）
+            const threshold = Math.max(rect.width, rect.height) * 0.75;
+            
+            if (distance < threshold && distance < closestDistance) {
+                closestDistance = distance;
+                closestLane = index;
+            }
+        });
+        
+        return closestLane;
+    }
+    
+    /**
+     * フルスクリーンサポート
+     */
+    setupFullscreenSupport() {
+        // ダブルタップでフルスクリーン切り替え（タイトル画面のみ）
+        let lastTap = 0;
+        document.getElementById('title-screen').addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            
+            if (tapLength < 300 && tapLength > 0) {
+                this.toggleFullscreen();
+            }
+            lastTap = currentTime;
+        });
+    }
+    
+    /**
+     * フルスクリーン切り替え
+     */
+    toggleFullscreen() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+    
+    /**
+     * リサイズ処理
+     */
+    handleResize() {
+        // ノートフィールドのサイズを再計算
+        // CSSで自動対応しているので、必要に応じて追加処理
     }
     
     /**
@@ -454,8 +578,11 @@ class RhythmGame {
             const currentX = centerX + (targetX - centerX) * progress;
             const currentY = centerY + (targetY - centerY) * progress;
             
-            note.element.style.left = `${currentX - 20}px`;
-            note.element.style.top = `${currentY - 20}px`;
+            // ノーツのサイズを動的に取得
+            const noteSize = note.element.offsetWidth / 2 || 20;
+            
+            note.element.style.left = `${currentX - noteSize}px`;
+            note.element.style.top = `${currentY - noteSize}px`;
             
             // スケール調整（遠くから近づいてくる感じ）
             const scale = 0.3 + (progress * 0.7);
