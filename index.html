@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="アイドルリズムゲーム - スクフェス・デレステ風のブラウザリズムゲーム">
+    <title>Idol Rhythm Game - アイドルリズムゲーム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- PWA用アイコン（オプション） -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+</head>
+<body>
+    <!-- タイトル画面 -->
+    <div id="title-screen" class="screen active">
+        <div class="title-container">
+            <h1 class="game-title">
+                <span class="title-star">★</span>
+                Idol Rhythm
+                <span class="title-star">★</span>
+            </h1>
+            <p class="subtitle">~ Stage of Dreams ~</p>
+            <div class="idol-silhouettes">
+                <div class="idol-silhouette"></div>
+                <div class="idol-silhouette"></div>
+                <div class="idol-silhouette"></div>
+            </div>
+            <button id="start-btn" class="menu-btn">START</button>
+        </div>
+        <div class="floating-notes">
+            <span class="float-note">♪</span>
+            <span class="float-note">♫</span>
+            <span class="float-note">♪</span>
+            <span class="float-note">♫</span>
+        </div>
+    </div>
+
+    <!-- 楽曲選択画面 -->
+    <div id="song-select-screen" class="screen">
+        <div class="screen-header">
+            <button id="back-to-title" class="back-btn">← 戻る</button>
+            <h2>楽曲選択</h2>
+        </div>
+        <div class="song-list" id="song-list">
+            <!-- 楽曲がJSで追加される -->
+        </div>
+    </div>
+
+    <!-- 難易度選択画面 -->
+    <div id="difficulty-screen" class="screen">
+        <div class="screen-header">
+            <button id="back-to-songs" class="back-btn">← 戻る</button>
+            <h2>難易度選択</h2>
+        </div>
+        <div class="selected-song-info" id="selected-song-info">
+            <h3 id="selected-song-name"></h3>
+        </div>
+        <div class="difficulty-list">
+            <button class="difficulty-btn easy" data-difficulty="easy">
+                <span class="diff-name">EASY</span>
+                <span class="diff-stars">★☆☆☆☆</span>
+                <span class="diff-level">Lv.3</span>
+            </button>
+            <button class="difficulty-btn normal" data-difficulty="normal">
+                <span class="diff-name">NORMAL</span>
+                <span class="diff-stars">★★☆☆☆</span>
+                <span class="diff-level">Lv.8</span>
+            </button>
+            <button class="difficulty-btn hard" data-difficulty="hard">
+                <span class="diff-name">HARD</span>
+                <span class="diff-stars">★★★★☆</span>
+                <span class="diff-level">Lv.15</span>
+            </button>
+            <button class="difficulty-btn expert" data-difficulty="expert">
+                <span class="diff-name">EXPERT</span>
+                <span class="diff-stars">★★★★★</span>
+                <span class="diff-level">Lv.25</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="screen">
+        <!-- ゲーム情報 -->
+        <div class="game-header">
+            <div class="score-display">
+                <span class="label">SCORE</span>
+                <span id="score" class="value">0</span>
+            </div>
+            <div class="combo-display">
+                <span id="combo" class="combo-value">0</span>
+                <span class="label">COMBO</span>
+            </div>
+            <div class="life-display">
+                <span class="label">LIFE</span>
+                <div class="life-bar">
+                    <div id="life-fill" class="life-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ゲームエリア（円形配置） -->
+        <div class="game-area">
+            <div class="stage-bg" id="stage-bg">
+                <!-- アイドルたちのシルエット -->
+                <div class="stage-idol" id="idol-1"></div>
+                <div class="stage-idol" id="idol-2"></div>
+                <div class="stage-idol" id="idol-3"></div>
+            </div>
+            <div class="note-field" id="note-field">
+                <!-- 9つの判定サークル -->
+                <div class="judge-circle" data-lane="0"></div>
+                <div class="judge-circle" data-lane="1"></div>
+                <div class="judge-circle" data-lane="2"></div>
+                <div class="judge-circle" data-lane="3"></div>
+                <div class="judge-circle" data-lane="4"></div>
+                <div class="judge-circle" data-lane="5"></div>
+                <div class="judge-circle" data-lane="6"></div>
+                <div class="judge-circle" data-lane="7"></div>
+                <div class="judge-circle" data-lane="8"></div>
+            </div>
+            <!-- 判定表示 -->
+            <div class="judge-display" id="judge-display"></div>
+        </div>
+
+        <!-- 進行バー -->
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <!-- 一時停止ボタン -->
+        <button id="pause-btn" class="pause-btn">||</button>
+    </div>
+
+    <!-- 一時停止画面 -->
+    <div id="pause-screen" class="screen overlay">
+        <div class="pause-menu">
+            <h2>PAUSE</h2>
+            <button id="resume-btn" class="menu-btn">再開</button>
+            <button id="restart-btn" class="menu-btn">リトライ</button>
+            <button id="quit-btn" class="menu-btn">楽曲選択に戻る</button>
+        </div>
+    </div>
+
+    <!-- リザルト画面 -->
+    <div id="result-screen" class="screen">
+        <div class="result-container">
+            <h2 class="result-title">RESULT</h2>
+            <div class="result-rank" id="result-rank">S</div>
+            <div class="result-score">
+                <span class="label">SCORE</span>
+                <span id="final-score" class="value">0</span>
+            </div>
+            <div class="result-stats">
+                <div class="stat">
+                    <span class="stat-label">PERFECT</span>
+                    <span id="perfect-count" class="stat-value perfect">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">GREAT</span>
+                    <span id="great-count" class="stat-value great">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">GOOD</span>
+                    <span id="good-count" class="stat-value good">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">BAD</span>
+                    <span id="bad-count" class="stat-value bad">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">MISS</span>
+                    <span id="miss-count" class="stat-value miss">0</span>
+                </div>
+            </div>
+            <div class="result-combo">
+                <span class="label">MAX COMBO</span>
+                <span id="max-combo" class="value">0</span>
+            </div>
+            <div class="result-buttons">
+                <button id="retry-btn" class="menu-btn">リトライ</button>
+                <button id="select-btn" class="menu-btn">楽曲選択</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- オーディオ要素 -->
+    <audio id="game-audio" preload="auto"></audio>
+    <audio id="tap-sound" src="sounds/tap.mp3" preload="auto"></audio>
+
+    <script src="js/songs.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
